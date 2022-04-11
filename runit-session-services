@@ -1,0 +1,71 @@
+#!/bin/sh
+# runit-session
+# Copyright (c) 2022 Jovan Lanik
+
+set -f
+
+fn() { PATH='' command -v "$1" >/dev/null && "$@"; }
+error() { echo "$0: Error: $1." >&2; exit 1; }
+
+[ "$RUNIT_SESSION" ] || error 'RUNIT_SESSION not set'
+session=$RUNIT_SESSION
+[ -r "$session/pid" ] && error 'Session is already running'
+
+# start services in user home,
+# funny shit can happen if not.
+cd || exit 1
+
+# source service script
+# special functions (pre_service, post_service, end_service) are executed later
+[ -d '/etc/runit-session' ] && conf='/etc/runit-session'
+[ -d "$HOME/.session/runit-session" ] && conf="$HOME/.session/runit-session"
+[ -d "$XDG_CONFIG_HOME/runit-session" ] && conf="$XDG_CONFIG_HOME/runit-session"
+[ -r "$conf/service" ] && . "$conf/service"
+[ -r "$conf/service" ] || dbus-update-activation-environment --all
+
+svdir="$session/service"
+mkdir "$svdir"
+
+# link services to svdir inside the session directory.
+set +f
+for service in "$conf"/*/
+do
+	svname=$(basename "$service")
+	mkdir "$svdir/$svname"
+	ln -s "$service/"* "$svdir/$svname/"
+done
+set -f
+
+# this function is useful for changing things in the svdir,
+# like adding or generating other services.
+fn pre_service
+
+SVDIR=$svdir runsvdir "$svdir" &
+pid=$!
+trap '' EXIT
+trap '' HUP
+trap '' INT
+trap '' QUIT
+trap '' TERM
+echo $pid > "$session/pid"
+wait $pid
+
+# post_service is executed after runsvdir is started,
+# but it doesn't guarantee any service is ready.
+# if you intend to do things that depend on a service here,
+# please check the service beforehand.
+fn post_service
+
+check() {
+	for service in "$svdir/"*
+	do
+		SVDIR="$svdir" sv status "$(basename "$service")" && return 0
+	done
+	return 1
+}
+
+# cleanup
+while check; do sleep 1; done
+fn end_service
+rm -rf "$session/service" || error "Couldn't remove service directory"
+exit 0

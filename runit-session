@@ -1,0 +1,30 @@
+#!/bin/sh
+# runit-session
+# Copyright (c) 2022 Jovan Lanik
+
+set -f
+
+error() { echo "$0: Error: $1." >&2; exit 1; }
+
+[ "$RUNIT_SESSION" ] && error 'RUNIT_SESSION is already set'
+
+if [ "$XDG_RUNTIME_DIR" ] 
+then
+	mkdir -p "$XDG_RUNTIME_DIR/runit-session"
+	session="$(mktemp -dtp "$XDG_RUNTIME_DIR/runit-session" XXXXXXXXXX)"
+else
+	session="$(mktemp -dt runit-session.XXXXXXXXXX)"
+fi
+export RUNIT_SESSION="$session"
+
+[ -r '/etc/runit-session/session' ] && conf='/etc/runit-session/session'
+[ -r "$HOME/.session/runit-session/session" ] && conf="$HOME/.session/runit-session/session"
+[ -r "$XDG_CONFIG_HOME/runit-session/session" ] && conf="$XDG_CONFIG_HOME/runit-session/session"
+[ "$conf" ] && . "$conf"
+[ "$conf" ] || dbus-run-session sway
+
+[ -r "$session/pid" ] || error "Session at $session has no PID"
+pid=$(cat "$session/pid")
+kill -HUP "$pid"
+rm -rf "$session" || error "Couldn't remove session directory"
+exit 0
