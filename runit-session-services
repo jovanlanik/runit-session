@@ -18,7 +18,7 @@ cd || exit 1
 # source service script
 # special functions (pre_service, post_service, end_service) are executed later
 [ -d '/etc/runit-session' ] && conf='/etc/runit-session'
-[ -d "$HOME/.session/runit-session" ] && conf="$HOME/.session/runit-session"
+[ -d "$HOME/.config/runit-session" ] && conf="$HOME/.config/runit-session"
 [ -d "$XDG_CONFIG_HOME/runit-session" ] && conf="$XDG_CONFIG_HOME/runit-session"
 [ -r "$conf/service" ] && . "$conf/service"
 [ -r "$conf/service" ] || dbus-update-activation-environment --all
