@@ -42,13 +42,7 @@ fn pre_service
 
 SVDIR=$svdir runsvdir "$svdir" &
 pid=$!
-trap '' EXIT
-trap '' HUP
-trap '' INT
-trap '' QUIT
-trap '' TERM
 echo $pid > "$session/pid"
-wait $pid
 
 # post_service is executed after runsvdir is started,
 # but it doesn't guarantee any service is ready.
@@ -57,15 +51,26 @@ wait $pid
 fn post_service
 
 check() {
-	for service in "$svdir/"*
+	for service in "$svdir"/*/
 	do
 		SVDIR="$svdir" sv status "$(basename "$service")" && return 0
 	done
 	return 1
 }
 
-# cleanup
-while check; do sleep 1; done
-fn end_service
-rm -rf "$session/service" || error "Couldn't remove service directory"
+cleanup() {
+	kill -HUP $pid
+	while check; do sleep 1; done
+	fn end_service
+	rm -rf "$session/service" || error "Couldn't remove service directory"
+	rm -rf "$session/pid"
+}
+
+trap cleanup HUP
+trap cleanup INT
+trap cleanup TERM
+
+wait $pid
+
+cleanup
 exit 0

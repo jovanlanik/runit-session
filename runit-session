@@ -15,6 +15,7 @@ then
 else
 	session="$(mktemp -dt runit-session.XXXXXXXXXX)"
 fi
+
 export RUNIT_SESSION="$session"
 
 [ -r '/etc/runit-session/session' ] && conf='/etc/runit-session/session'
@@ -23,8 +24,6 @@ export RUNIT_SESSION="$session"
 [ "$conf" ] && . "$conf"
 [ "$conf" ] || dbus-run-session sway
 
-[ -r "$session/pid" ] || error "Session at $session has no PID"
-pid=$(cat "$session/pid")
-kill -HUP "$pid"
+while [ -r "$session/pid" ]; do sleep 1; done
 rm -rf "$session" || error "Couldn't remove session directory"
 exit 0
