@@ -20,13 +20,14 @@ cd || exit 1
 [ -d '/etc/runit-session' ] && conf='/etc/runit-session'
 [ -d "$HOME/.config/runit-session" ] && conf="$HOME/.config/runit-session"
 [ -d "$XDG_CONFIG_HOME/runit-session" ] && conf="$XDG_CONFIG_HOME/runit-session"
-[ -r "$conf/service" ] && . "$conf/service"
 [ -r "$conf/service" ] || dbus-update-activation-environment --all
+[ -r "$conf/service" ] && . "$conf/service"
 
 svdir="$session/service"
 mkdir "$svdir"
 
 # link services to svdir inside the session directory.
+svname=''
 set +f
 for service in "$conf"/*/
 do
@@ -35,6 +36,7 @@ do
 	ln -s "$service/"* "$svdir/$svname/"
 done
 set -f
+unset svname
 
 # this function is useful for changing things in the svdir,
 # like adding or generating other services.

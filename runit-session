@@ -21,8 +21,8 @@ export RUNIT_SESSION="$session"
 [ -r '/etc/runit-session/session' ] && conf='/etc/runit-session/session'
 [ -r "$HOME/.config/runit-session/session" ] && conf="$HOME/.config/runit-session/session"
 [ -r "$XDG_CONFIG_HOME/runit-session/session" ] && conf="$XDG_CONFIG_HOME/runit-session/session"
-[ "$conf" ] && . "$conf"
 [ "$conf" ] || dbus-run-session sway
+[ "$conf" ] && . "$conf"
 
 while [ -r "$session/pid" ]; do sleep 1; done
 rm -rf "$session" || error "Couldn't remove session directory"
