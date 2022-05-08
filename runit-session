@@ -24,6 +24,17 @@ export RUNIT_SESSION="$session"
 [ "$conf" ] || dbus-run-session sway
 [ "$conf" ] && . "$conf"
 
-while [ -r "$session/pid" ]; do sleep 1; done
+pid=$(cat "$session/pid")
+svdir="$session/service"
+kill -HUP "$pid"
+check() {
+	for service in "$svdir"/*/
+	do
+		SVDIR=$svdir sv status "$(basename "$service")" && return 0
+	done
+	return 1
+}
+while check; do sleep 1; done
+
 rm -rf "$session" || error "Couldn't remove session directory"
 exit 0

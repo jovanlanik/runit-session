@@ -4,7 +4,6 @@
 
 set -f
 
-fn() { PATH='' command -v "$1" >/dev/null && "$@"; }
 error() { echo "$0: Error: $1." >&2; exit 1; }
 
 [ "$RUNIT_SESSION" ] || error 'RUNIT_SESSION not set'
@@ -16,7 +15,6 @@ session=$RUNIT_SESSION
 cd || exit 1
 
 # source service script
-# special functions (pre_service, post_service, end_service) are executed later
 [ -d '/etc/runit-session' ] && conf='/etc/runit-session'
 [ -d "$HOME/.config/runit-session" ] && conf="$HOME/.config/runit-session"
 [ -d "$XDG_CONFIG_HOME/runit-session" ] && conf="$XDG_CONFIG_HOME/runit-session"
@@ -38,41 +36,5 @@ done
 set -f
 unset svname
 
-# this function is useful for changing things in the svdir,
-# like adding or generating other services.
-fn pre_service
-
-SVDIR=$svdir runsvdir "$svdir" &
-pid=$!
-echo $pid > "$session/pid"
-
-# post_service is executed after runsvdir is started,
-# but it doesn't guarantee any service is ready.
-# if you intend to do things that depend on a service here,
-# please check the service beforehand.
-fn post_service
-
-check() {
-	for service in "$svdir"/*/
-	do
-		SVDIR="$svdir" sv status "$(basename "$service")" && return 0
-	done
-	return 1
-}
-
-cleanup() {
-	kill -HUP $pid
-	while check; do sleep 1; done
-	fn end_service
-	rm -rf "$session/service" || error "Couldn't remove service directory"
-	rm -rf "$session/pid"
-	exit 0
-}
-
-trap cleanup HUP
-trap cleanup INT
-trap cleanup TERM
-
-wait $pid
-
-cleanup
+echo $$ > "$session/pid"
+SVDIR=$svdir exec runsvdir "$svdir"
