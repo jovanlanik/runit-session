@@ -1,8 +1,8 @@
 # runit-session
 Manage services in a graphical session using runit.
-# Installation
+## Installation
 Install `./runit-session` and `./runit-session-service` somewhere in `$PATH`.
-# Usage
+## Usage
 The session is started by running `$ runit-session`.
 It will find your session config `~/.config/runit-session/session` and source it.
 This is where you setup the environment and start your Wayland compositor or Xorg.
