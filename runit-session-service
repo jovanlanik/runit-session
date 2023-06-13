@@ -37,4 +37,4 @@ set -f
 unset svname
 
 echo $$ > "$session/pid"
-SVDIR=$svdir exec runsvdir "$svdir"
+exec runsvdir "$svdir"
