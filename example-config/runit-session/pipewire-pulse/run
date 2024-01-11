@@ -1,0 +1,3 @@
+#!/bin/sh
+SVDIR="$RUNIT_SESSION/service" sv check pipewire >/dev/null || exit 1
+exec pipewire-pulse

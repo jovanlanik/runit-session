@@ -10,3 +10,6 @@ If no config is found, `$ dbus-run-session sway` is ran.
 From your compositor or session you should start `$ runit-session-service`.
 This script makes copies of all services from `~/.config/runit-session/` and starts them.
 After your session ends and all services exit, the copies are removed.
+## Example configuration
+There is an example configuration with a few services.
+The `./example-config/runit-session` directory should be installed to `$XDG_CONFIG_HOME`

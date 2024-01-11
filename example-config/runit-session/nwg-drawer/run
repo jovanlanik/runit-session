@@ -1,0 +1,3 @@
+#!/bin/sh
+cd
+exec nwg-drawer -c 6 -r -term alacritty -g Adwaita-dark -nocats -nofs -spacing 0
